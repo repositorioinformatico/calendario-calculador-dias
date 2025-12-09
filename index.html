@@ -310,7 +310,7 @@
             </div>
 
             <div class="stat-card">
-                <h3>Tiempo restante (días completos + horas)</h3>
+                <h3>Diferencia (días completos + horas)</h3>
                 <div id="rangeStats">
                     <div style="font-size: 16px; color: #333; line-height: 1.6;">
                         <div>
@@ -325,7 +325,7 @@
             </div>
 
             <div class="stat-card">
-                <h3>Totales (minutos y segundos)</h3>
+                <h3>Totales</h3>
                 <div>
                     <span class="value" id="time">-</span>
                 </div>
@@ -398,17 +398,28 @@
 
         function handleDayClick(day) {
             const clickedDate = new Date(currentYear, currentMonth, day);
+            const now = new Date();
 
             if (!startDate) {
                 // First click - set start date
-                startDate = clickedDate;
+                // If it's a past date, use current time; otherwise use 00:00:00
+                if (clickedDate < now) {
+                    startDate = new Date(currentYear, currentMonth, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+                } else {
+                    startDate = clickedDate;
+                }
                 endDate = null;
                 document.getElementById('instructions').textContent = 'Navega al mes/año deseado y selecciona el día final';
                 document.getElementById('timeToggleBtn').style.display = 'none';
                 document.getElementById('timeControl').classList.remove('visible');
             } else if (!endDate) {
-                // Second click - set end date (end of day)
-                endDate = new Date(currentYear, currentMonth, day, 23, 59, 59, 999);
+                // Second click - set end date
+                // If it's a past date, use current time; otherwise use end of day
+                if (new Date(currentYear, currentMonth, day) < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+                    endDate = new Date(currentYear, currentMonth, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+                } else {
+                    endDate = new Date(currentYear, currentMonth, day, 23, 59, 59, 999);
+                }
 
                 // Swap if end is before start
                 if (endDate < startDate) {
@@ -420,7 +431,11 @@
                 startCountdown();
             } else {
                 // Third click - reset
-                startDate = clickedDate;
+                if (clickedDate < now) {
+                    startDate = new Date(currentYear, currentMonth, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+                } else {
+                    startDate = clickedDate;
+                }
                 endDate = null;
                 stopCountdown();
                 document.getElementById('instructions').textContent = 'Navega al mes/año deseado y selecciona el día final';
@@ -499,26 +514,16 @@
 
             const now = new Date();
             const diff = endDate - now;
+            const absDiff = Math.abs(diff);
 
-            if (diff <= 0) {
-                document.getElementById('days').textContent = '0';
-                document.getElementById('weeks').textContent = '';
-                document.getElementById('hours').textContent = '0';
-                document.getElementById('minutes').textContent = '0';
-                document.getElementById('seconds').textContent = '0';
-                document.getElementById('time').innerHTML = '<span style="font-size: 20px; color: #e74c3c;">Finalizado</span>';
-                stopCountdown();
-                return;
-            }
+            // Calculate complete days and remaining time (using absolute value)
+            const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((absDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((absDiff % (1000 * 60)) / 1000);
 
-            // Calculate complete days and remaining time
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            const totalMinutes = Math.floor(diff / (1000 * 60));
-            const totalSeconds = Math.floor(diff / 1000);
+            const totalMinutes = Math.floor(absDiff / (1000 * 60));
+            const totalSeconds = Math.floor(absDiff / 1000);
 
             // Calculate weeks and remaining days
             const weeks = Math.floor(days / 7);
