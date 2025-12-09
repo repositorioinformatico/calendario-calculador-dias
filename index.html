@@ -206,16 +206,13 @@
             </div>
 
             <div class="stat-card">
-                <h3>Días en el rango</h3>
+                <h3>Cuenta regresiva</h3>
                 <div id="rangeStats">
-                    <div style="margin-bottom: 8px;">
-                        <span class="value" id="days">-</span>
-                        <span class="unit">días</span>
-                    </div>
-                    <div style="font-size: 14px; color: #666;">
-                        <span id="totalMinutes">-</span> <span style="font-size: 12px; color: #999;">minutos</span>
-                        <br>
-                        <span id="totalSeconds">-</span> <span style="font-size: 12px; color: #999;">segundos</span>
+                    <div style="font-size: 16px; color: #333; line-height: 1.6;">
+                        <div><span class="value" style="font-size: 28px;" id="days">-</span> <span class="unit">días</span></div>
+                        <div><span id="hours">-</span> <span style="font-size: 12px; color: #999;">horas</span></div>
+                        <div><span id="minutes">-</span> <span style="font-size: 12px; color: #999;">minutos</span></div>
+                        <div><span id="seconds">-</span> <span style="font-size: 12px; color: #999;">segundos</span></div>
                     </div>
                 </div>
             </div>
@@ -348,21 +345,20 @@
             const dateRangeEl = document.getElementById('dateRange');
 
             if (startDate && endDate) {
-                const diffTime = Math.abs(endDate - startDate);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                daysEl.textContent = diffDays;
                 dateRangeEl.innerHTML = `${formatDate(startDate)}<br><span style="color: #999;">hasta</span><br>${formatDate(endDate)}`;
             } else if (startDate) {
                 daysEl.textContent = '-';
+                document.getElementById('hours').textContent = '-';
+                document.getElementById('minutes').textContent = '-';
+                document.getElementById('seconds').textContent = '-';
                 document.getElementById('time').textContent = '-';
-                document.getElementById('totalMinutes').textContent = '-';
-                document.getElementById('totalSeconds').textContent = '-';
                 dateRangeEl.innerHTML = `${formatDate(startDate)}<br><span style="color: #999;">Inicio seleccionado</span>`;
             } else {
                 daysEl.textContent = '-';
+                document.getElementById('hours').textContent = '-';
+                document.getElementById('minutes').textContent = '-';
+                document.getElementById('seconds').textContent = '-';
                 document.getElementById('time').textContent = '-';
-                document.getElementById('totalMinutes').textContent = '-';
-                document.getElementById('totalSeconds').textContent = '-';
                 dateRangeEl.textContent = '-';
             }
         }
@@ -374,9 +370,11 @@
             const diff = endDate - now;
 
             if (diff <= 0) {
+                document.getElementById('days').textContent = '0';
+                document.getElementById('hours').textContent = '0';
+                document.getElementById('minutes').textContent = '0';
+                document.getElementById('seconds').textContent = '0';
                 document.getElementById('time').innerHTML = '<span style="font-size: 20px; color: #e74c3c;">Finalizado</span>';
-                document.getElementById('totalMinutes').textContent = '0';
-                document.getElementById('totalSeconds').textContent = '0';
                 stopCountdown();
                 return;
             }
@@ -389,17 +387,19 @@
             const totalMinutes = Math.floor(diff / (1000 * 60));
             const totalSeconds = Math.floor(diff / 1000);
 
-            // Update countdown display
+            // Update countdown display (breakdown)
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours;
+            document.getElementById('minutes').textContent = minutes;
+            document.getElementById('seconds').textContent = seconds;
+
+            // Update time remaining (totals)
             document.getElementById('time').innerHTML = `
                 <span style="font-size: 16px; color: #666;">${totalMinutes.toLocaleString()}</span>
                 <span style="font-size: 12px; color: #999;"> min</span>
                 <span style="font-size: 16px; color: #666; margin-left: 10px;">${totalSeconds.toLocaleString()}</span>
                 <span style="font-size: 12px; color: #999;"> seg</span>
             `;
-
-            // Update range stats
-            document.getElementById('totalMinutes').textContent = totalMinutes.toLocaleString();
-            document.getElementById('totalSeconds').textContent = totalSeconds.toLocaleString();
         }
 
         function startCountdown() {
