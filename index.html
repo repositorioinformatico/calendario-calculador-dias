@@ -295,8 +295,8 @@
                 endDate = null;
                 document.getElementById('instructions').textContent = 'Navega al mes/año deseado y selecciona el día final';
             } else if (!endDate) {
-                // Second click - set end date
-                endDate = clickedDate;
+                // Second click - set end date (end of day)
+                endDate = new Date(currentYear, currentMonth, day, 23, 59, 59, 999);
 
                 // Swap if end is before start
                 if (endDate < startDate) {
@@ -385,7 +385,7 @@
                 return;
             }
 
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
             const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
