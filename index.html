@@ -525,21 +525,35 @@
             const totalMinutes = Math.floor(absDiff / (1000 * 60));
             const totalSeconds = Math.floor(absDiff / 1000);
 
-            // Calculate weeks and remaining days
-            const weeks = Math.floor(days / 7);
-            const remainingDays = days % 7;
-            let weeksText = '';
-            if (weeks >= 1) {
-                weeksText = `(${weeks} sem`;
-                if (remainingDays > 0) {
-                    weeksText += ` y ${remainingDays} ${remainingDays === 1 ? 'día' : 'días'}`;
+            // Calculate years, weeks and remaining days
+            const years = Math.floor(days / 365);
+            const daysAfterYears = days % 365;
+            const weeks = Math.floor(daysAfterYears / 7);
+            const remainingDays = daysAfterYears % 7;
+
+            let timeText = '';
+            if (years >= 1) {
+                // Show years, weeks and days
+                timeText = `(${years} ${years === 1 ? 'año' : 'años'}`;
+                if (weeks > 0) {
+                    timeText += `, ${weeks} sem`;
                 }
-                weeksText += ')';
+                if (remainingDays > 0) {
+                    timeText += ` y ${remainingDays} ${remainingDays === 1 ? 'día' : 'días'}`;
+                }
+                timeText += ')';
+            } else if (weeks >= 1) {
+                // Show only weeks and days
+                timeText = `(${weeks} sem`;
+                if (remainingDays > 0) {
+                    timeText += ` y ${remainingDays} ${remainingDays === 1 ? 'día' : 'días'}`;
+                }
+                timeText += ')';
             }
 
             // Update countdown display (breakdown)
             document.getElementById('days').textContent = days;
-            document.getElementById('weeks').textContent = weeksText;
+            document.getElementById('weeks').textContent = timeText;
             document.getElementById('hours').textContent = hours;
             document.getElementById('minutes').textContent = minutes;
             document.getElementById('seconds').textContent = seconds;
