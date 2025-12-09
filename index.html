@@ -219,11 +219,11 @@
             </div>
 
             <div class="stat-card">
-                <h3>Cuenta regresiva</h3>
+                <h3>Tiempo restante (días completos + horas)</h3>
                 <div id="rangeStats">
                     <div style="font-size: 16px; color: #333; line-height: 1.6;">
                         <div>
-                            <span class="value" style="font-size: 28px;" id="days">-</span> <span class="unit">días</span>
+                            <span class="value" style="font-size: 28px;" id="days">-</span> <span class="unit">días completos</span>
                             <span id="weeks" style="font-size: 14px; color: #999;"></span>
                         </div>
                         <div><span id="hours">-</span> <span style="font-size: 12px; color: #999;">horas</span></div>
@@ -234,7 +234,7 @@
             </div>
 
             <div class="stat-card">
-                <h3>Tiempo restante</h3>
+                <h3>Totales (minutos y segundos)</h3>
                 <div>
                     <span class="value" id="time">-</span>
                 </div>
@@ -404,7 +404,8 @@
                 return;
             }
 
-            const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+            // Calculate complete days and remaining time
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
