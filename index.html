@@ -184,6 +184,83 @@
             width: 100%;
         }
 
+        .time-control {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+            display: none;
+        }
+
+        .time-control.visible {
+            display: block;
+        }
+
+        .time-toggle-btn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .time-toggle-btn:hover {
+            background: #357abd;
+        }
+
+        .time-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .time-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .time-input-group label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+        }
+
+        .time-input-group input {
+            width: 60px;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .time-input-group input:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+
+        .apply-time-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 18px;
+            transition: all 0.2s;
+        }
+
+        .apply-time-btn:hover {
+            background: #229954;
+        }
+
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -215,6 +292,20 @@
                 <h3>Rango seleccionado</h3>
                 <div>
                     <span class="value" id="dateRange" style="font-size: 14px; font-weight: 500;">-</span>
+                </div>
+                <button class="time-toggle-btn" id="timeToggleBtn" style="display: none;">⏱ Ajustar hora final</button>
+                <div class="time-control" id="timeControl">
+                    <div class="time-inputs">
+                        <div class="time-input-group">
+                            <label>Hora</label>
+                            <input type="number" id="hourInput" min="0" max="23" value="23" />
+                        </div>
+                        <div class="time-input-group">
+                            <label>Minuto</label>
+                            <input type="number" id="minuteInput" min="0" max="59" value="59" />
+                        </div>
+                        <button class="apply-time-btn" id="applyTimeBtn">Aplicar</button>
+                    </div>
                 </div>
             </div>
 
@@ -313,6 +404,8 @@
                 startDate = clickedDate;
                 endDate = null;
                 document.getElementById('instructions').textContent = 'Navega al mes/año deseado y selecciona el día final';
+                document.getElementById('timeToggleBtn').style.display = 'none';
+                document.getElementById('timeControl').classList.remove('visible');
             } else if (!endDate) {
                 // Second click - set end date (end of day)
                 endDate = new Date(currentYear, currentMonth, day, 23, 59, 59, 999);
@@ -323,6 +416,7 @@
                 }
 
                 document.getElementById('instructions').textContent = 'Haz clic en cualquier día para crear un nuevo rango';
+                document.getElementById('timeToggleBtn').style.display = 'inline-block';
                 startCountdown();
             } else {
                 // Third click - reset
@@ -330,6 +424,8 @@
                 endDate = null;
                 stopCountdown();
                 document.getElementById('instructions').textContent = 'Navega al mes/año deseado y selecciona el día final';
+                document.getElementById('timeToggleBtn').style.display = 'none';
+                document.getElementById('timeControl').classList.remove('visible');
             }
 
             updateCalendarDisplay();
@@ -355,11 +451,22 @@
             });
         }
 
-        function formatDate(date) {
+        function formatDate(date, includeTime = false) {
             const day = date.getDate();
             const month = monthNames[date.getMonth()];
             const year = date.getFullYear();
-            return `${day} ${month} ${year}`;
+            let result = `${day} ${month} ${year}`;
+
+            if (includeTime) {
+                const hour = date.getHours();
+                const minute = date.getMinutes();
+                // Only show time if it's not 23:59
+                if (hour !== 23 || minute !== 59) {
+                    result += ` <span style="color: #4a90e2;">${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}</span>`;
+                }
+            }
+
+            return result;
         }
 
         function updateStats() {
@@ -367,7 +474,7 @@
             const dateRangeEl = document.getElementById('dateRange');
 
             if (startDate && endDate) {
-                dateRangeEl.innerHTML = `${formatDate(startDate)}<br><span style="color: #999;">hasta</span><br>${formatDate(endDate)}`;
+                dateRangeEl.innerHTML = `${formatDate(startDate)}<br><span style="color: #999;">hasta</span><br>${formatDate(endDate, true)}`;
             } else if (startDate) {
                 daysEl.textContent = '-';
                 document.getElementById('weeks').textContent = '';
@@ -470,6 +577,34 @@
             currentYear += delta;
             renderCalendar();
         }
+
+        // Toggle time control visibility
+        document.getElementById('timeToggleBtn').addEventListener('click', () => {
+            const timeControl = document.getElementById('timeControl');
+            timeControl.classList.toggle('visible');
+        });
+
+        // Apply custom time
+        document.getElementById('applyTimeBtn').addEventListener('click', () => {
+            if (!endDate) return;
+
+            const hour = parseInt(document.getElementById('hourInput').value) || 0;
+            const minute = parseInt(document.getElementById('minuteInput').value) || 0;
+
+            // Update end date with custom time
+            const year = endDate.getFullYear();
+            const month = endDate.getMonth();
+            const day = endDate.getDate();
+            endDate = new Date(year, month, day, hour, minute, 59, 999);
+
+            // Restart countdown with new time
+            stopCountdown();
+            startCountdown();
+            updateStats();
+
+            // Hide the time control
+            document.getElementById('timeControl').classList.remove('visible');
+        });
 
         // Initialize
         renderCalendar();
