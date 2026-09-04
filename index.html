@@ -512,8 +512,19 @@
         function updateCountdown() {
             if (!endDate) return;
 
-            const now = new Date();
-            const diff = endDate - now;
+            /* EL ORIGEN DE LA MEDIDA (issue #1)
+               Antes esto medía SIEMPRE desde `now`, así que el recuadro
+               "Diferencia (días completos)" no enseñaba la diferencia entre
+               las dos fechas elegidas, sino los días que faltaban desde hoy
+               hasta la final. Por eso el número cambiaba solo de un día para
+               otro y no cuadraba nunca. No tenía nada que ver con cambiar de
+               año: fallaba igual dentro del mismo año.
+
+               Ahora: si hay DOS fechas, se mide entre ellas —que es lo que
+               dice el rótulo—; si solo hay la final, se mantiene la cuenta
+               atrás desde ahora, que es para lo que sirve. */
+            const origen = startDate || new Date();
+            const diff = endDate - origen;
             const absDiff = Math.abs(diff);
 
             // Calculate complete days and remaining time (using absolute value)
@@ -525,9 +536,25 @@
             const totalMinutes = Math.floor(absDiff / (1000 * 60));
             const totalSeconds = Math.floor(absDiff / 1000);
 
-            // Calculate years, weeks and remaining days
-            const years = Math.floor(days / 365);
-            const daysAfterYears = days % 365;
+            /* Los años se cuentan por CALENDARIO, no dividiendo entre 365.
+               Con 365 fijos, un rango bisiesto de 366 días salía como
+               "1 año y 1 día" en vez de "1 año", y el error se acumulaba en
+               rangos largos. Aquí se avanza año a año desde la fecha menor
+               mientras quepa, que es como lo cuenta una persona. */
+            const desde = new Date(Math.min(origen, endDate));
+            const hasta = new Date(Math.max(origen, endDate));
+
+            let years = 0;
+            const cursor = new Date(desde);
+            while (true) {
+                const siguiente = new Date(cursor);
+                siguiente.setFullYear(siguiente.getFullYear() + 1);
+                if (siguiente > hasta) break;
+                cursor.setTime(siguiente.getTime());
+                years++;
+            }
+
+            const daysAfterYears = Math.floor((hasta - cursor) / (1000 * 60 * 60 * 24));
             const weeks = Math.floor(daysAfterYears / 7);
             const remainingDays = daysAfterYears % 7;
 
@@ -570,7 +597,10 @@
         function startCountdown() {
             stopCountdown();
             updateCountdown();
-            countdownInterval = setInterval(updateCountdown, 1000);
+            // Refrescar cada segundo solo tiene sentido en la cuenta atrás.
+            // Con dos fechas fijas el resultado no cambia, y repintarlo cada
+            // segundo solo gasta batería.
+            if (!startDate) countdownInterval = setInterval(updateCountdown, 1000);
         }
 
         function stopCountdown() {
